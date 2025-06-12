@@ -15,12 +15,11 @@ interface FramePreviewProps {
 
 const MahdiyyaFrameGenerator: React.FC = () => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [frameImage, setFrameImage] = useState<string>('./frame.png');
+  const [frameImage, setFrameImage] = useState<string>('./frame-2.png');
   const [imagePosition, setImagePosition] = useState<ImagePosition>({ x: 0, y: 0 });
   const [imageScale, setImageScale] = useState<number>(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const frameInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
@@ -35,18 +34,7 @@ const MahdiyyaFrameGenerator: React.FC = () => {
     }
   };
 
-  const handleFrameUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        if (e.target?.result) {
-          setFrameImage(e.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+ 
 
   const downloadFramedImage = (): void => {
     if (!frameImage) {
@@ -227,6 +215,37 @@ const MahdiyyaFrameGenerator: React.FC = () => {
           {/* Preview */}
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">Preview</h2>
+
+            {/* Select the frame */}
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Frame Image
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFrameImage('./frame-1.png')}
+                  className={`px-4 py-2 rounded-lg border ${frameImage === './frame-1.png' ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-gray-700 border-gray-300 hover:bg-pink-100'}`}
+                >
+                  Frame 1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFrameImage('./frame-2.png')}
+                  className={`px-4 py-2 rounded-lg border ${frameImage === './frame-2.png' ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-gray-700 border-gray-300 hover:bg-pink-100'}`}
+                >
+                  Frame 2
+                </button>
+                {/* <button
+                  type="button"
+                  onClick={() => setFrameImage('./frame-3.png')}
+                  className={`px-4 py-2 rounded-lg border ${frameImage === './frame-3.png' ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-gray-700 border-gray-300 hover:bg-pink-100'}`}
+                >
+                  Frame 3
+                </button> */}
+              </div>
+            </div>
             
             <div className="relative">
               <FramePreview 
