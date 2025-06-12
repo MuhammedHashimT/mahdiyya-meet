@@ -1,45 +1,64 @@
 import React, { useState, useRef } from 'react';
 import { Download, Upload, X } from 'lucide-react';
 
-const MahdiyyaFrameGenerator = () => {
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [frameImage, setFrameImage] = useState('./frame.png');
-  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
-  const [imageScale, setImageScale] = useState(1);
-  const canvasRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const frameInputRef = useRef(null);
+interface ImagePosition {
+  x: number;
+  y: number;
+}
 
-  const handleImageUpload = (event) => {
-    const file = event.target.files[0];
+interface FramePreviewProps {
+  frameImage: string | null;
+  uploadedImage: string | null;
+  imagePosition: ImagePosition;
+  imageScale: number;
+}
+
+const MahdiyyaFrameGenerator: React.FC = () => {
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [frameImage, setFrameImage] = useState<string>('./frame.png');
+  const [imagePosition, setImagePosition] = useState<ImagePosition>({ x: 0, y: 0 });
+  const [imageScale, setImageScale] = useState<number>(1);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const frameInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setUploadedImage(e.target.result);
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target?.result) {
+          setUploadedImage(e.target.result as string);
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleFrameUpload = (event) => {
-    const file = event.target.files[0];
+  const handleFrameUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setFrameImage(e.target.result);
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target?.result) {
+          setFrameImage(e.target.result as string);
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const downloadFramedImage = () => {
+  const downloadFramedImage = (): void => {
     if (!frameImage) {
       alert('Please upload a frame image first!');
       return;
     }
 
     const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
     const frame = new Image();
     frame.onload = () => {
@@ -97,8 +116,22 @@ const MahdiyyaFrameGenerator = () => {
     frame.src = frameImage;
   };
 
-  // Remove the drawFrame, drawFrameOverlay, drawCherryBlossoms, drawCrowdSilhouette, and drawDecorations functions
-  // as they are no longer needed
+  const handleScaleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setImageScale(parseFloat(e.target.value));
+  };
+
+  const handlePositionXChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setImagePosition(prev => ({ ...prev, x: parseInt(e.target.value) }));
+  };
+
+  const handlePositionYChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setImagePosition(prev => ({ ...prev, y: parseInt(e.target.value) }));
+  };
+
+  const clearAllImages = (): void => {
+    setUploadedImage(null);
+    setFrameImage('./frame.png');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 p-4">
@@ -113,8 +146,6 @@ const MahdiyyaFrameGenerator = () => {
             <h2 className="text-xl font-semibold mb-4 text-gray-800">Controls</h2>
             
             <div className="space-y-4">
-             
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Upload Content Image
@@ -127,7 +158,7 @@ const MahdiyyaFrameGenerator = () => {
                   className="hidden"
                 />
                 <button
-                  onClick={() => fileInputRef.current.click()}
+                  onClick={() => fileInputRef.current?.click()}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
                 >
                   <Upload size={20} />
@@ -147,7 +178,7 @@ const MahdiyyaFrameGenerator = () => {
                       max="2"
                       step="0.1"
                       value={imageScale}
-                      onChange={(e) => setImageScale(parseFloat(e.target.value))}
+                      onChange={handleScaleChange}
                       className="w-full"
                     />
                   </div>
@@ -161,7 +192,7 @@ const MahdiyyaFrameGenerator = () => {
                       min="-100"
                       max="100"
                       value={imagePosition.x}
-                      onChange={(e) => setImagePosition(prev => ({...prev, x: parseInt(e.target.value)}))}
+                      onChange={handlePositionXChange}
                       className="w-full"
                     />
                   </div>
@@ -175,16 +206,13 @@ const MahdiyyaFrameGenerator = () => {
                       min="-100"
                       max="100"
                       value={imagePosition.y}
-                      onChange={(e) => setImagePosition(prev => ({...prev, y: parseInt(e.target.value)}))}
+                      onChange={handlePositionYChange}
                       className="w-full"
                     />
                   </div>
                   
                   <button
-                    onClick={() => {
-                      setUploadedImage(null);
-                      setFrameImage(null);
-                    }}
+                    onClick={clearAllImages}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                   >
                     <X size={20} />
@@ -228,7 +256,12 @@ const MahdiyyaFrameGenerator = () => {
   );
 };
 
-const FramePreview = ({ frameImage, uploadedImage, imagePosition, imageScale }) => {
+const FramePreview: React.FC<FramePreviewProps> = ({ 
+  frameImage, 
+  uploadedImage, 
+  imagePosition, 
+  imageScale 
+}) => {
   if (!frameImage) {
     return (
       <div className="w-full max-w-sm mx-auto h-96 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
@@ -261,8 +294,8 @@ const FramePreview = ({ frameImage, uploadedImage, imagePosition, imageScale }) 
               alt="Content"
               className="absolute inset-0 w-full h-full object-cover"
               style={{
-            transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageScale})`,
-            transformOrigin: 'center'
+                transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageScale})`,
+                transformOrigin: 'center'
               }}
             />
           </div>
@@ -274,7 +307,6 @@ const FramePreview = ({ frameImage, uploadedImage, imagePosition, imageScale }) 
           alt="Frame" 
           className="w-full h-auto block relative z-10"
         />
-        
         
         {/* Overlay message when no content image */}
         {!uploadedImage && (
