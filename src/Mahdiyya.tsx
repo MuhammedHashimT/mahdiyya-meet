@@ -20,6 +20,7 @@ const MahdiyyaFrameGenerator: React.FC = () => {
   const [imageScale, setImageScale] = useState<number>(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const frameInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
@@ -34,6 +35,18 @@ const MahdiyyaFrameGenerator: React.FC = () => {
     }
   };
 
+  const handleFrameUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target?.result) {
+          setFrameImage(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const downloadFramedImage = (): void => {
     if (!frameImage) {
@@ -53,37 +66,26 @@ const MahdiyyaFrameGenerator: React.FC = () => {
       canvas.width = frame.width;
       canvas.height = frame.height;
       
-      // Draw the frame as background
-      ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-      
-      // If there's an uploaded image, draw it on top
+      // If there's an uploaded image, draw it first as background (same as preview)
       if (uploadedImage) {
         const img = new Image();
         img.onload = () => {
-          // Calculate the content area (adjust these values based on your frame)
-          const contentArea = {
-            x: canvas.width * 0.05, // 5% from left
-            y: canvas.height * 0.2,  // 20% from top
-            width: canvas.width * 0.9, // 90% of width
-            height: canvas.height * 0.5 // 50% of height
-          };
-          
-          // Save context for clipping
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(contentArea.x, contentArea.y, contentArea.width, contentArea.height);
-          ctx.clip();
+          // Clear canvas
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
           
           // Calculate scaled dimensions
           const scaledWidth = img.width * imageScale;
           const scaledHeight = img.height * imageScale;
           
-          // Center the image in the content area and apply position offset
-          const drawX = contentArea.x + contentArea.width/2 - scaledWidth/2 + imagePosition.x;
-          const drawY = contentArea.y + contentArea.height/2 - scaledHeight/2 + imagePosition.y;
+          // Center the image and apply position offset (same as preview)
+          const drawX = canvas.width/2 - scaledWidth/2 + imagePosition.x;
+          const drawY = canvas.height/2 - scaledHeight/2 + imagePosition.y;
           
+          // Draw the background image without clipping
           ctx.drawImage(img, drawX, drawY, scaledWidth, scaledHeight);
-          ctx.restore();
+          
+          // Draw the frame on top
+          ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
           
           // Download the combined image
           const link = document.createElement('a');
@@ -93,6 +95,10 @@ const MahdiyyaFrameGenerator: React.FC = () => {
         };
         img.src = uploadedImage;
       } else {
+        // Clear canvas and draw frame only
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+        
         // Download frame only
         const link = document.createElement('a');
         link.download = 'mahdiyya-meet-frame.png';
@@ -268,20 +274,19 @@ const FramePreview: React.FC<FramePreviewProps> = ({
           <div 
             className="absolute inset-0"
             style={{
-              top: '0%',
-              left: '0%',
-              right: '0%',
-              bottom: '0%',
-              overflow: 'hidden',
               zIndex: 0
             }}
           >
             <img
               src={uploadedImage}
               alt="Content"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute"
               style={{
-                transform: `translate(${imagePosition.x}px, ${imagePosition.y}px) scale(${imageScale})`,
+                width: 'auto',
+                height: 'auto',
+                left: '50%',
+                top: '50%',
+                transform: `translate(calc(-50% + ${imagePosition.x}px), calc(-50% + ${imagePosition.y}px)) scale(${imageScale})`,
                 transformOrigin: 'center'
               }}
             />
