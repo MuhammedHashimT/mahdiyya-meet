@@ -20,7 +20,6 @@ const MahdiyyaFrameGenerator: React.FC = () => {
   const [imageScale, setImageScale] = useState<number>(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const frameInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
@@ -35,18 +34,6 @@ const MahdiyyaFrameGenerator: React.FC = () => {
     }
   };
 
-  const handleFrameUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        if (e.target?.result) {
-          setFrameImage(e.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const downloadFramedImage = (): void => {
     if (!frameImage) {
